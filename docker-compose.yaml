@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  reindex:
+    container_name: reindex
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/usr/src/app/logs
+    
+
+
+# volumes:
+#   reindex:
+#     external: true

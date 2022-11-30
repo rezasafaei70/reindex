@@ -1,0 +1,5 @@
+logs/
+temp/
+data.db
+.idea
+__pycache__

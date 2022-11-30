@@ -7,11 +7,21 @@ from prometheus_client import start_http_server
 from prometheus import count_origin_index_map, count_origin_index_kavosh, count_origin_index_rtp
 from reindex import Reindex
 import logging
+import logging.handlers as handlers
 from settings import config
 
-logging.basicConfig(filename='logs/debug.log', encoding='utf-8', level=eval(config['LOGLEVEL']),
-                    format='%(asctime)s %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-logging.getLogger('elasticsearch').setLevel(logging.ERROR)
+
+logger = logging.getLogger('reindex')
+logger.setLevel(eval(config['LOGLEVEL']))
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logHandler = handlers.TimedRotatingFileHandler('logs/debug.log', when='M', interval=1, backupCount=2)
+logHandler.setLevel(logging.INFO)
+
+logHandler.setFormatter(formatter)
+
+logger.addHandler(logHandler)
 
 
 def check_index_origin():
