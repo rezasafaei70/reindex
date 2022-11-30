@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./logs:/usr/src/app/logs
+      - /opt/logs:/usr/src/app/logs
     
 
 
