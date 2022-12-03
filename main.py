@@ -25,11 +25,11 @@ logger.addHandler(logHandler)
 
 
 def check_index_origin():
-    count_origin_index_rtp()
-    count_origin_index_kavosh()
-    count_origin_index_map()
-    time.sleep(500)
-    check_index_origin()
+    while True:
+        count_origin_index_rtp()
+        count_origin_index_kavosh()
+        count_origin_index_map()
+        time.sleep(500)
 
 def reindex_kavosh():
     reindex_kavosh = Reindex(config['KAVOSH_INDEX'], 'temp/index')
@@ -63,6 +63,9 @@ if __name__ == '__main__':
     t3.start()
     t4 = threading.Thread(target=failure)
     t4.start()
+    t5 = threading.Thread(target=check_index_origin)
+    t4.start()
+
 
 
 
