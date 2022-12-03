@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
 
 build_docker:
   tags:
@@ -20,4 +21,27 @@ build_docker:
       - tags
   except:
     - branches
+
+deploy_docker:
+  image: gitlab.local.boshrapardaz.ir:4567/registry/alpine_ssh:latest
+  when: on_success
+  retry: 2
+  stage: deploy
+  before_script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p 22 -4 192.168.10.124 >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIV_KEY" | tr -d '\r' | ssh-add -
+  script:
+    - ssh -T boshra@192.168.10.124 -p22 "cd /opt/reindex/ && docker-compose pull && docker-compose up -d "
+  only:
+    refs:
+      - tags
+  except:
+    - branches
+  tags:
+    - ssh
+
 

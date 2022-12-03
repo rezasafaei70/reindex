@@ -31,26 +31,41 @@ def check_index_origin():
     time.sleep(500)
     check_index_origin()
 
+def reindex_kavosh():
+    reindex_kavosh = Reindex(config['KAVOSH_INDEX'], 'temp/index')
+    while True:
+        reindex_kavosh.reindex()
+        time.sleep(int(config['TIME_SLEEP']))
+def reindex_rtp():
+    reindex_rtp = Reindex(config['RTP_INDEX'], 'temp/rtp')
+    while True:
+        reindex_rtp.reindex()
+        time.sleep(int(config['TIME_SLEEP']))
+
+def reindex_map():
+    reindex_map = Reindex(config['MAP_INDEX'], 'temp/map')
+    while True:
+        reindex_map.reindex()
+        time.sleep(int(config['TIME_SLEEP']))
+
+def failure():
+    reindex_failure = Reindex()
+    while True:
+        reindex_failure.check_failure()
+        time.sleep(int(config['TIME_SLEEP']))
 if __name__ == '__main__':
     start_http_server(8000)
-    reindex_kavosh = Reindex(config['KAVOSH_INDEX'], 'temp/index')
-    reindex_map = Reindex(config['MAP_INDEX'], 'temp/map')
-    reindex_rtp = Reindex(config['RTP_INDEX'], 'temp/rtp')
+    t1 = threading.Thread(target=reindex_kavosh)
+    t1.start()
+    t2 = threading.Thread(target=reindex_map)
+    t2.start()
+    t3 = threading.Thread(target=reindex_rtp)
+    t3.start()
+    t4 = threading.Thread(target=failure)
+    t4.start()
 
-    thread_index_origin = threading.Thread(target=check_index_origin)
-    thread_index_origin.start()
-    #
-    thread_kavosh = threading.Thread(target=reindex_kavosh.reindex)
-    thread_kavosh.start()
 
-    thread_map = threading.Thread(target=reindex_map.reindex)
-    thread_map.start()
 
-    thread_rtp = threading.Thread(target=reindex_rtp.reindex)
-    thread_rtp.start()
-
-    check_failure = threading.Thread(target=reindex_rtp.check_failure)
-    check_failure.start()
 
 
 

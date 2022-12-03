@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 import time
 
 import elasticsearch
@@ -23,16 +24,17 @@ es1 = Elasticsearch([config['ELASTIC_HOST_REQUEST_TIME']],
 
 
 class Reindex:
-    def __init__(self, index_name, file_name):
+    def __init__(self, index_name='', file_name=''):
         self.file_name = file_name
-        try:
-            f = open(file_name, 'r')
-            f.close()
-            print("File Exists")
-        except IOError:
-            f = open(file_name, 'w+')
-            f.close()
-            print("File Created")
+        if index_name != '':
+            try:
+                f = open(file_name, 'r')
+                f.close()
+                print("File Exists")
+            except IOError:
+                f = open(file_name, 'w+')
+                f.close()
+                print("File Created")
 
         self.index_name = index_name
         self.index_name_star = index_name + '*'
@@ -73,9 +75,9 @@ class Reindex:
         logger.debug("Reindex:get_start_time after request return info_time: " + str(info_time))
         return info_time
 
-    def query(self, start_time, end_time):
+    def query(self, start_time, end_time,index_name):
         time_dest = int(int(start_time) / 1000)
-        dest_index = 'dd' + self.index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
+        dest_index = self.index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
         logger.debug("REINDEX:query  dest_index : " + dest_index)
         if self.index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
@@ -84,7 +86,7 @@ class Reindex:
         query = {
 
             "source": {
-                "index": self.index_name_star,
+                "index": index_name,
                 "size": 100,
                 "remote": {
                     "host": config['REMOTE_HOST_SOURCE']
@@ -121,7 +123,7 @@ class Reindex:
                     logger.debug("start_time " + str(start_time))
                     end_time = int(start_time) + (int(config['ELASTIC_DURATION']) * 1000)
                     start_time, end_time = self.checktime(start_time, end_time)
-                    query = self.query(start_time, end_time)
+                    query = self.query(start_time, end_time,self.index_name_star)
                     try:
                         res = es.reindex(query)
                         logger.info("reindex result " + json.dumps(res))
@@ -161,21 +163,34 @@ class Reindex:
                                 error_count_reindex_rtp(res['created'])
                         logger.error("Reindex:reindex error elastic reindex " + str(e))
                     logger.debug("Reindex:reindex end_time write file " + str(end_time))
-
         except Exception as e:
             logger.warning("Reindex:reindex  " + str(e))
-        time.sleep(int(config['TIME_SLEEP']))
-        self.reindex()
+
+        # self.reindex()
         return 'ok'
+
+    def read_file(self):
+        file = open(self.file_name, 'r')
+        time = file.read()
+        file.close()
+        return time
+
+    def write_file(self, end_time):
+        try:
+            if (end_time != "NOTEXIST"):
+                file = open(self.file_name, 'w')
+                file.write(str(end_time))
+                file.close()
+
+        except Exception as e:
+            logger.error("write_file error " + str(e))
 
     def check_failure(self):
         try:
             session = Session()
-
             failurs = session.query(Failure).all()
-
             for item in failurs:
-                query = self.query(item.start_time, item.end_time)
+                query = self.query(item.start_time, item.end_time,item.index_name)
                 try:
                     res = es.reindex(query)
                     logger.info("check failoure " + json.dumps(res))
@@ -197,25 +212,6 @@ class Reindex:
                         error_count_reindex_rtp(res['created'])
 
             Session.remove()
-
         except Exception as e:
             logger.error("Reindex:check_failure " + str(e))
-        time.sleep(int(config['TIME_SLEEP']))
-        self.check_failure()
         return "ok"
-
-    def read_file(self):
-        file = open(self.file_name, 'r')
-        time = file.read()
-        file.close()
-        return time
-
-    def write_file(self, end_time):
-        try:
-            if (end_time != "NOTEXIST"):
-                file = open(self.file_name, 'w')
-                file.write(str(end_time))
-                file.close()
-
-        except Exception as e:
-            logger.error("write_file error " + str(e))

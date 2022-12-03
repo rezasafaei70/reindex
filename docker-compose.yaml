@@ -2,11 +2,13 @@ version: "3.7"
 services:
   reindex:
     container_name: reindex
+#    image: gitlab.local.boshrapardaz.ir:4567/inews/reindex:latest
     build: .
     ports:
       - "8000:8000"
     volumes:
       - /opt/logs:/usr/src/app/logs
+      - /opt/temp: /usr/src/app/temp
     
 
 
