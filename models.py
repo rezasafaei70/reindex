@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Column, String
+from sqlalchemy import Integer, Column, String,TEXT
 
 from db import Base
 
@@ -9,4 +9,5 @@ class Failure(Base):
     start_time = Column(String)
     end_time = Column(String)
     index_name = Column(String)
+    query = Column(TEXT)
 

@@ -150,7 +150,7 @@ class Reindex:
                             logger.debug("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
                             self.write_file(end_time)
                             session = Session()
-                            failure = Failure(start_time=start_time, end_time=end_time, index_name=self.index_name_star)
+                            failure = Failure(start_time=start_time, end_time=end_time, index_name=self.index_name_star,query=json.dumps(query))
                             session.add(failure)
                             session.commit()
                             Session.remove()

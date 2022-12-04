@@ -1,6 +1,7 @@
 logs/
 temp/
-data.db
+db/data.db
 .idea
 __pycache__
 .env
+database
