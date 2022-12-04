@@ -1,9 +1,9 @@
 logs/*
 temp/
-db/data.db
+database/*
 .idea
 __pycache__
 .env
-database/*
+
 
 
