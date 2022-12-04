@@ -146,21 +146,22 @@ class Reindex:
                             self.write_file(s_time)
 
                     except elasticsearch.ElasticsearchException as e:
-                        if e.status_code != 'N/A':
-                            logger.debug("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
-                            self.write_file(end_time)
-                            session = Session()
-                            failure = Failure(start_time=start_time, end_time=end_time, index_name=self.index_name_star,query=json.dumps(query))
-                            session.add(failure)
-                            session.commit()
-                            Session.remove()
-                        else:
+                        if e.status_code == 'N/A':
                             if self.index_name == config['KAVOSH_INDEX']:
                                 error_count_reindex_kavosh(res['created'])
                             elif self.index_name == config['MAP_INDEX']:
                                 error_count_reindex_map(res['created'])
                             elif self.index_name == config['RTP_INDEX']:
                                 error_count_reindex_rtp(res['created'])
+                            logger.debug("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
+                            
+                        else:
+                            self.write_file(end_time)
+                            session = Session()
+                            failure = Failure(start_time=start_time, end_time=end_time, index_name=self.index_name_star,query=json.dumps(query))
+                            session.add(failure)
+                            session.commit()
+                            Session.remove()
                         logger.error("Reindex:reindex error elastic reindex " + str(e))
                     logger.debug("Reindex:reindex end_time write file " + str(end_time))
         except Exception as e:
