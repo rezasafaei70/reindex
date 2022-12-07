@@ -14,7 +14,14 @@ g6 = Gauge('count_index_origin_kavosh', 'number of origin index kavosh')
 g7 = Gauge('count_index_origin_map', 'number of origin index map')
 g8 = Gauge('count_index_origin_rtp', 'number of origin index rtp')
 
+
+g9 = Gauge('count_remote_reindex_kavosh', 'number remote reindex kavosh')
+g10 = Gauge('count_remote_reindex_map', 'number of remote reindex index map')
+g11 = Gauge('count_remote_reindex_rtp', 'number of remote reindex rtp')
+
 es = Elasticsearch([config['ELASTIC_HOST_REQUEST_TIME']], timeout=int(config['TIMEOUT']))
+es1 = Elasticsearch([config['ELASTIC_HOST_REINDEX']], timeout=int(config['TIMEOUT']))
+
 
 @g.track_inprogress()
 def count_reindex_kavosh(value):
@@ -52,4 +59,20 @@ def count_origin_index_map():
 def count_origin_index_rtp():
     count = es.count(index=config['RTP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
     g8.set(count)
+    
+    
+@g9.track_inprogress()
+def count_remote_reindex_kavosh():
+    count = es1.count(index=config['KAVOSH_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    g9.set(count)
+
+@g10.track_inprogress()
+def count_remote_reindex_map():
+    count = es1.count(index=config['MAP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    g10.set(count)
+
+@g11.track_inprogress()
+def count_remote_reindex_rtp():
+    count = es1.count(index=config['RTP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    g11.set(count)
 
