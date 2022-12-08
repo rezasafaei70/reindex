@@ -17,8 +17,8 @@ logger = logging.getLogger('reindex')
 
 Base.metadata.create_all(engine)
 
-es = Elasticsearch([config['ELASTIC_HOST_REINDEX']], timeout=int(config['TIMEOUT']))
-es1 = Elasticsearch([config['ELASTIC_HOST_REQUEST_TIME']],
+es = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT']))
+es1 = Elasticsearch([config['ELASTIC_SOURCE']],
                     timeout=int(config['TIMEOUT']))  # request for  get the first time
 
 
@@ -77,19 +77,23 @@ class Reindex:
 
     def query(self, start_time, end_time,index_name):
         time_dest = int(int(start_time) / 1000)
-        dest_index = index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
+        dest_index = "dd"+index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
         logger.debug("REINDEX:query  dest_index : " + dest_index)
         if index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
         else:
             range = {"range": {"info.index_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
+        if config['SSL']:
+            source = "https://"+config['ELASTIC_SOURCE']
+        else:
+            source = "http://"+config['ELASTIC_SOURCE']
         query = {
 
             "source": {
                 "index": index_name,
                 "size": 100,
                 "remote": {
-                    "host": config['REMOTE_HOST_SOURCE']
+                    "host": source
                 },
                 "query": range
             },

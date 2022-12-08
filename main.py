@@ -4,7 +4,7 @@ import time
 
 from prometheus_client import start_http_server
 
-from prometheus import count_origin_index_map, count_origin_index_kavosh, count_origin_index_rtp, count_remote_reindex_kavosh, count_remote_reindex_map, count_remote_reindex_rtp
+from prometheus import count_dest_kavosh, count_dest_map, count_dest_rtp, count_from_kavosh, count_from_map, count_from_rtp
 from reindex import Reindex
 import logging
 import logging.handlers as handlers
@@ -26,13 +26,13 @@ logger.addHandler(logHandler)
 
 def check_index_origin():
     while True:
-        count_origin_index_rtp()
-        count_origin_index_kavosh()
-        count_origin_index_map()
-        count_remote_reindex_rtp()
-        count_remote_reindex_kavosh()
-        
-        time.sleep(500)
+        count_from_rtp()
+        count_from_kavosh()
+        count_from_map()
+        count_dest_rtp()
+        count_dest_kavosh()
+        count_dest_map()
+        time.sleep(int(config['TIME_SLEEP']))
 
 def reindex_kavosh():
     reindex_kavosh = Reindex(config['KAVOSH_INDEX'], 'temp/index')
