@@ -16,7 +16,7 @@ logger.setLevel(eval(config['LOGLEVEL']))
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-logHandler = handlers.TimedRotatingFileHandler('logs/debug.log', when='M', interval=1, backupCount=2)
+logHandler = handlers.TimedRotatingFileHandler('logs/debug.log', when='d', interval=1, backupCount=5)
 logHandler.setLevel(logging.INFO)
 
 logHandler.setFormatter(formatter)
