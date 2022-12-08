@@ -77,9 +77,9 @@ class Reindex:
 
     def query(self, start_time, end_time,index_name):
         time_dest = int(int(start_time) / 1000)
-        dest_index = self.index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
+        dest_index = index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
         logger.debug("REINDEX:query  dest_index : " + dest_index)
-        if self.index_name == config['MAP_INDEX']:
+        if index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
         else:
             range = {"range": {"info.index_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
