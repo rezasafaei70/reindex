@@ -63,16 +63,16 @@ def count_from_rtp():
     
 @g9.track_inprogress()
 def count_dest_kavosh():
-    count = es1.count(index=config['KAVOSH_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    count = es1.count(index='dd'+config['KAVOSH_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
     g9.set(count)
 
 @g10.track_inprogress()
 def count_dest_map():
-    count = es1.count(index=config['MAP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    count = es1.count(index='dd'+config['MAP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
     g10.set(count)
 
 @g11.track_inprogress()
 def count_dest_rtp():
-    count = es1.count(index=config['RTP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
+    count = es1.count(index='dd'+config['RTP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
     g11.set(count)
 

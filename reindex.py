@@ -79,18 +79,19 @@ class Reindex:
         time_dest = int(int(start_time) / 1000)
         dest_index = "dd"+index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
         logger.debug("REINDEX:query  dest_index : " + dest_index)
+        
         if index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
         else:
             range = {"range": {"info.index_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
-        if config['SSL']:
+        if config['SSL']=='TRUE':
             source = "https://"+config['ELASTIC_SOURCE']
         else:
             source = "http://"+config['ELASTIC_SOURCE']
         query = {
 
             "source": {
-                "index": index_name,
+                "index": index_name+"*",
                 "size": 100,
                 "remote": {
                     "host": source
@@ -127,7 +128,7 @@ class Reindex:
                     logger.debug("start_time " + str(start_time))
                     end_time = int(start_time) + (int(config['ELASTIC_DURATION']) * 1000)
                     start_time, end_time = self.checktime(start_time, end_time)
-                    query = self.query(start_time, end_time,self.index_name_star)
+                    query = self.query(start_time, end_time,self.index_name)
                     try:
                         res = es.reindex(query)
                         logger.info("reindex result " + json.dumps(res))
@@ -195,7 +196,8 @@ class Reindex:
             session = Session()
             failurs = session.query(Failure).all()
             for item in failurs:
-                query = self.query(item.start_time, item.end_time,item.index_name)
+                index_name = item.index_name.split('*')[0]
+                query = self.query(item.start_time, item.end_time,index_name)
                 try:
                     res = es.reindex(query)
                     logger.info("check failoure " + json.dumps(res))
