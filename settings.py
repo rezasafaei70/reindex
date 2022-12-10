@@ -12,4 +12,11 @@ if not isExist_logs:
     os.makedirs('logs')
 
 config = dotenv_values(".env")
+if "" in config['TIMEOUT']:
+    config['TIMEOUT'] = 30
+if "" in config['ELASTIC_DURATION']:
+     config['ELASTIC_DURATION']=30
+if "" in config['TIME_SLEEP']:
+     config['TIME_SLEEP'] = 1
+    
 

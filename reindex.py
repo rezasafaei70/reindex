@@ -20,7 +20,7 @@ Base.metadata.create_all(engine)
 es = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT']))
 es1 = Elasticsearch([config['ELASTIC_SOURCE']],
                     timeout=int(config['TIMEOUT']))  # request for  get the first time
-
+es3 = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT'])*15)
 
 
 class Reindex:
@@ -52,12 +52,13 @@ class Reindex:
             else:
                 sort = [{"info.index_time": {"order": "asc"}}]
                 range = {"range": {"info.index_time": {"gte": int(gte_time), "boost": 2.0}}}
-            try:
-                query = {"size": 1, "sort": sort,
+                
+            query = {"size": 1, "sort": sort,
                          "query": range}
+            try:
+                
                 res = es1.search(query, index=self.index_name_star)
                 res = res['hits']['hits']
-
                 if len(res):
                     if self.index_name == config['MAP_INDEX']:
                         info_time = res[0]['_source']['indexed_time']
@@ -70,7 +71,7 @@ class Reindex:
                     return "NOTEXIST"
             except elasticsearch.ElasticsearchException as e:
                 logger.error("Rindex:get_start_time  error exception:" + str(e))
-
+                logger.error("Rindex:get_start_time query "+ json.dumps(query))
                 return "NOTEXIST"
         logger.debug("Reindex:get_start_time after request return info_time: " + str(info_time))
         return info_time
@@ -92,9 +93,9 @@ class Reindex:
 
             "source": {
                 "index": index_name+"*",
-                "size": 100,
+                "size": 1000,
                 "remote": {
-                    "host": source
+                    "host": source,
                 },
                 "query": range
             },
@@ -102,7 +103,7 @@ class Reindex:
                 "index": dest_index
             }
         }
-        logger.info("Reindex:query :" + json.dumps(query))
+        logger.debug("Reindex:query :" + json.dumps(query))
         return query
 
     def checktime(self, start_time, end_time):
@@ -116,7 +117,7 @@ class Reindex:
                                             second=59).timestamp()) * 1000
                 return start_time, end
         except Exception as e:
-            logger.error("Reindex:checktime " + str(e))
+            logger.error("Reindex:checktime error" + str(e)) 
             return 0, 0
 
     def reindex(self):
@@ -131,7 +132,8 @@ class Reindex:
                     query = self.query(start_time, end_time,self.index_name)
                     try:
                         res = es.reindex(query)
-                        logger.info("reindex result " + json.dumps(res))
+                        logger.info("reindex result " + json.dumps(res) + " index_name " +self.index_name)
+                        logger.info("reindex query" + str(query))
                         if res['updated'] or res['created']:
                             if self.index_name == config['KAVOSH_INDEX']:
                                 count_reindex_kavosh(res['created'])
@@ -151,6 +153,8 @@ class Reindex:
                             self.write_file(s_time)
 
                     except elasticsearch.ElasticsearchException as e:
+                        logger.error("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
+                        logger.error("Reindex:reindex error elastic reindex " + str(e))
                         if e.status_code == 'N/A':
                             if self.index_name == config['KAVOSH_INDEX']:
                                 error_count_reindex_kavosh(res['created'])
@@ -158,16 +162,18 @@ class Reindex:
                                 error_count_reindex_map(res['created'])
                             elif self.index_name == config['RTP_INDEX']:
                                 error_count_reindex_rtp(res['created'])
-                            logger.debug("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
-                            
+                            logger.info("Reindex:reindex  conection failed  :" + str(end_time) + "  index_name " + self.index_name)
                         else:
-                            self.write_file(end_time)
+                            logger.info("Reindex:reindex before write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
+                            end_time = int(end_time) + (int(config['ELASTIC_DURATION']) * 1000)
+                            self.write_file(str(end_time))
+                            logger.info("Reindex:reindex after  write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
                             session = Session()
                             failure = Failure(start_time=start_time, end_time=end_time, index_name=self.index_name_star,query=json.dumps(query))
                             session.add(failure)
                             session.commit()
                             Session.remove()
-                        logger.error("Reindex:reindex error elastic reindex " + str(e))
+                
                     logger.debug("Reindex:reindex end_time write file " + str(end_time))
         except Exception as e:
             logger.warning("Reindex:reindex  " + str(e))
@@ -199,8 +205,8 @@ class Reindex:
                 index_name = item.index_name.split('*')[0]
                 query = self.query(item.start_time, item.end_time,index_name)
                 try:
-                    res = es.reindex(query)
-                    logger.info("check falure " + json.dumps(res))
+                    res = es3.reindex(query)
+                    logger.info("check falure " + json.dumps(res)+" index_name " +index_name)
                     logger.info("check falure query " + json.dumps(query))
                     session.query(Failure).filter(Failure.id == item.id).delete()
                     session.commit()
