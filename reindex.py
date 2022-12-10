@@ -200,7 +200,8 @@ class Reindex:
                 query = self.query(item.start_time, item.end_time,index_name)
                 try:
                     res = es.reindex(query)
-                    logger.info("check failoure " + json.dumps(res))
+                    logger.info("check falure " + json.dumps(res))
+                    logger.info("check falure query " + json.dumps(query))
                     session.query(Failure).filter(Failure.id == item.id).delete()
                     session.commit()
                     if self.index_name == config['KAVOSH_INDEX']:
@@ -210,7 +211,7 @@ class Reindex:
                     elif self.index_name == config['RTP_INDEX']:
                         count_reindex_rtp(res['created'])
                 except elasticsearch.ElasticsearchException as e:
-                    logger.error("proplem index failure " + str(e))
+                    logger.error("proplem index failure " + str(e) + "query "+ json.dumps(query))
                     if self.index_name == config['KAVOSH_INDEX']:
                         error_count_reindex_kavosh(res['created'])
                     elif self.index_name == config['MAP_INDEX']:

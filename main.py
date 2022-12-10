@@ -9,7 +9,8 @@ from reindex import Reindex
 import logging
 import logging.handlers as handlers
 from settings import config
-
+logging.basicConfig()
+logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
 
 logger = logging.getLogger('reindex')
 logger.setLevel(eval(config['LOGLEVEL']))
