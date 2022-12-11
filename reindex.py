@@ -110,6 +110,13 @@ class Reindex:
         try:
             start = datetime.datetime.fromtimestamp(int(int(start_time) / 1000))
             end = datetime.datetime.fromtimestamp(int(int(end_time) / 1000))
+            dest_index_name = self.index_name+end.strftime('%Y-%m-%d')
+            if es.indices.exists(index=dest_index_name):
+                logger.debug("index_exist")
+            else:
+                map = es1.indices.get_mapping(index=self.index_name_star)
+                es.indices.create(index=dest_index_name)
+                es.indices.put_mapping(index=dest_index_name,body=map[dest_index_name])
             if start.day == end.day:
                 return start_time, end_time
             else:
