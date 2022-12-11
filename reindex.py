@@ -93,7 +93,7 @@ class Reindex:
 
             "source": {
                 "index": index_name+"*",
-                "size": 1000,
+                "size": 100,
                 "remote": {
                     "host": source,
                 },
