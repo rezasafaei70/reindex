@@ -9,6 +9,7 @@ from reindex import Reindex
 import logging
 import logging.handlers as handlers
 from settings import config
+
 logging.basicConfig()
 logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
 
@@ -23,7 +24,6 @@ logHandler.setLevel(logging.INFO)
 logHandler.setFormatter(formatter)
 
 logger.addHandler(logHandler)
-
 
 def check_index_origin():
     while True:

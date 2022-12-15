@@ -23,6 +23,7 @@ es1 = Elasticsearch([config['ELASTIC_SOURCE']],
 es3 = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT'])*15)
 
 
+
 class Reindex:
     def __init__(self, index_name='', file_name=''):
         self.file_name = file_name
@@ -40,9 +41,7 @@ class Reindex:
         self.index_name_star = index_name + '*'
 
     def get_start_time(self, gte_time=0):
-
         info_time = self.read_file()
-
         logger.debug('Reindex:get_start_time before request is gte_time :' + str(gte_time))
         logger.debug('Reindex:get_start_time before request is info_time:' + str(info_time))
         if len(info_time) == 0 or gte_time != 0:
@@ -110,13 +109,26 @@ class Reindex:
         try:
             start = datetime.datetime.fromtimestamp(int(int(start_time) / 1000))
             end = datetime.datetime.fromtimestamp(int(int(end_time) / 1000))
-            dest_index_name = self.index_name+end.strftime('%Y-%m-%d')
+            dest_index_name = 'dd'+self.index_name+end.strftime('%Y-%m-%d')
+            source_index_name = self.index_name+end.strftime('%Y-%m-%d')
+            
             if es.indices.exists(index=dest_index_name):
                 logger.debug("index_exist")
             else:
-                map = es1.indices.get_mapping(index=self.index_name_star)
-                es.indices.create(index=dest_index_name)
-                es.indices.put_mapping(index=dest_index_name,body=map[dest_index_name])
+                mapping = es1.indices.get_mapping(index=self.index_name_star)[source_index_name]['mappings']
+                settings_set = es1.indices.get_settings(index=self.index_name_star)[source_index_name]['settings']
+                del settings_set['index']['uuid']
+                del settings_set['index']['provided_name']
+                del settings_set['index']['version']
+                del settings_set['index']['creation_date']
+        
+                body = {
+                    "settings":settings_set,
+                    "mappings":mapping
+                }
+            
+                es.indices.create(index=dest_index_name,body=body)
+                
             if start.day == end.day:
                 return start_time, end_time
             else:
@@ -129,6 +141,7 @@ class Reindex:
 
     def reindex(self):
         try:
+
             start_time = self.get_start_time()
             time_now = int(time.time()) * 1000
             if int(start_time) < int(time_now):
