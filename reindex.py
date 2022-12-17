@@ -13,13 +13,15 @@ from settings import config
 import datetime
 from db import Session, engine, Base
 
+
+
 logger = logging.getLogger('reindex')
 
 Base.metadata.create_all(engine)
 
-es = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT']))
+es = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT']),maxsize=100)
 es1 = Elasticsearch([config['ELASTIC_SOURCE']],
-                    timeout=int(config['TIMEOUT']))  # request for  get the first time
+                    timeout=int(config['TIMEOUT']),maxsize=100)  # request for  get the first time
 es3 = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT'])*15)
 
 lock = threading.Lock()
@@ -175,6 +177,7 @@ class Reindex:
                     except elasticsearch.ElasticsearchException as e:
                         logger.error("add error end time is :" + str(end_time) + "  index_name " + self.index_name)
                         logger.error("Reindex:reindex error elastic reindex " + str(e))
+                        logger.error("Reindex:reindex error elastic reindex query " + json.dumps(query))
                         if e.status_code == 'N/A':
                             if self.index_name == config['KAVOSH_INDEX']:
                                 error_count_reindex_kavosh(res['created'])
