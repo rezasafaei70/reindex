@@ -11,9 +11,9 @@ if not isExist_logs:
 
 config = dotenv_values(".env")
 if "" in config['TIMEOUT']:
-    config['TIMEOUT'] = 30
+    config['TIMEOUT'] = 50
 if "" in config['ELASTIC_DURATION']:
-     config['ELASTIC_DURATION']=30
+     config['ELASTIC_DURATION']=20
 if "" in config['TIME_SLEEP']:
      config['TIME_SLEEP'] = 1
     
