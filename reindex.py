@@ -22,7 +22,7 @@ es1 = Elasticsearch([config['ELASTIC_SOURCE']],
                     timeout=int(config['TIMEOUT']))  # request for  get the first time
 es3 = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT'])*15)
 
-
+lock = threading.Lock()
 
 class Reindex:
     def __init__(self, index_name='', file_name=''):
@@ -209,10 +209,11 @@ class Reindex:
 
     def write_file(self, end_time):
         try:
-            if (end_time != "NOTEXIST"):
-                file = open(self.file_name, 'w')
-                file.write(str(end_time))
-                file.close()
+            with lock:
+                if (end_time != "NOTEXIST"):
+                    file = open(self.file_name, 'w')
+                    file.write(str(end_time))
+                    file.close()
 
         except Exception as e:
             logger.error("write_file error " + str(e))
