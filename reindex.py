@@ -133,29 +133,40 @@ class Reindex:
                     "settings":settings_set,
                     "mappings":mapping
                 }
-            
+                
                 es.indices.create(index=dest_index_name,body=body)
                 
             if start.day == end.day:
                 return start_time, end_time
             else:
-                end = int(datetime.datetime(year=start.year, month=start.month, day=start.day, hour=23, minute=59,
-                                            second=59).timestamp()) * 1000
-                return start_time, end
+                if self.index_name==config['MAP_INDEX']:
+                    end_time = int(datetime.datetime(year=start.year, month=start.month, day=start.day, hour=23, minute=59,
+                                                second=59).timestamp()) * 1000
+                else:
+                    end_time = int(datetime.datetime(year=start.year, month=start.month, day=start.day, hour=23, minute=59,
+                                                second=59).timestamp())
+                return start_time, end_time
         except Exception as e:
             logger.error("Reindex:checktime error" + str(e)) 
             return 0, 0
 
     def reindex(self):
         try:
-
-            start_time = self.get_start_time()
-            time_now = int(time.time()) * 1000
+            with lock:
+                start_time = self.get_start_time()
+            if self.index_name == config['MAP_INDEX']:
+                time_now = int(time.time()) * 1000
+            else:
+                time_now = int(time.time())
             if int(start_time) < int(time_now):
                 if start_time != "NOTEXIST":
                     logger.debug("start_time " + str(start_time))
-                    end_time = int(start_time) + (int(config['ELASTIC_DURATION']) * 1000)
-                    start_time, end_time = self.checktime(start_time, end_time)
+                    if self.index_name==config['MAP_INDEX']:
+                        end_time = int(start_time) + (int(config['ELASTIC_DURATION']) * 1000)
+                    else:
+                        end_time = int(start_time) + int(config['ELASTIC_DURATION'])
+                    with lock:
+                        start_time, end_time = self.checktime(start_time, end_time)
                     query = self.query(start_time, end_time,self.index_name)
                     try:
                         res = es.reindex(query)
@@ -193,7 +204,10 @@ class Reindex:
                             logger.info("Reindex:reindex  conection failed  :" + str(end_time) + "  index_name " + self.index_name)
                         else:
                             logger.info("Reindex:reindex before write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
-                            end_time = int(end_time) + (int(config['ELASTIC_DURATION']) * 1000)
+                            if self.index_name == config['MAP_INDEX']:
+                                end_time = int(end_time) + (int(config['ELASTIC_DURATION']) * 1000)
+                            else:
+                                end_time = int(end_time) + int(config['ELASTIC_DURATION'])
                             self.write_file(str(end_time))
                             logger.info("Reindex:reindex after  write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
                             session = Session()
