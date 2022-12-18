@@ -85,7 +85,7 @@ class Reindex:
         if index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
         else:
-            range = {"range": {"info.index_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
+            range = {"range": {"info.first_packet_ts": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
         if config['SSL']=='TRUE':
             source = "https://"+config['ELASTIC_SOURCE']
         else:
