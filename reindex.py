@@ -51,8 +51,8 @@ class Reindex:
                 sort = [{"indexed_time": {"order": "asc"}}]
                 range = {"range": {"indexed_time": {"gte": int(gte_time), "boost": 2.0}}}
             else:
-                sort = [{"info.index_time": {"order": "asc"}}]
-                range = {"range": {"info.index_time": {"gte": int(gte_time), "boost": 2.0}}}
+                sort = [{"info.first_packet_ts": {"order": "asc"}}]
+                range = {"range": {"info.first_packet_ts": {"gte": int(gte_time), "boost": 2.0}}}
                 
             query = {"size": 1, "sort": sort,
                          "query": range}
@@ -64,7 +64,7 @@ class Reindex:
                     if self.index_name == config['MAP_INDEX']:
                         info_time = res[0]['_source']['indexed_time']
                     else:
-                        info_time = res[0]['_source']['info']['index_time']
+                        info_time = res[0]['_source']['info']['first_packet_ts']
                     logger.debug("Reindex:get_start_time after request info_time: " + str(info_time))
                 else:
                     logger.debug("Reindex:get_start_time not exists index")
