@@ -78,18 +78,18 @@ class Reindex:
         return info_time
 
     def query(self, start_time, end_time,index_name):
-        time_dest = int(int(start_time) / 1000)
-        dest_index = "dd"+index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
-        logger.debug("REINDEX:query  dest_index : " + dest_index)
-        
         if index_name == config['MAP_INDEX']:
             range = {"range": {"indexed_time": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
+            time_dest = int(int(start_time) / 1000)
         else:
             range = {"range": {"info.first_packet_ts": {"gte": int(start_time), "lte": end_time, "boost": 2.0}}}
+            time_dest = int(int(start_time))
         if config['SSL']=='TRUE':
             source = "https://"+config['ELASTIC_SOURCE']
         else:
             source = "http://"+config['ELASTIC_SOURCE']
+        dest_index = "dd"+index_name + (datetime.datetime.fromtimestamp(time_dest).strftime('%Y-%m-%d'))
+        logger.debug("REINDEX:query  dest_index : " + dest_index)
         query = {
 
             "source": {
@@ -109,8 +109,13 @@ class Reindex:
 
     def checktime(self, start_time, end_time):
         try:
-            start = datetime.datetime.fromtimestamp(int(int(start_time) / 1000))
-            end = datetime.datetime.fromtimestamp(int(int(end_time) / 1000))
+            if self.index_name==config['MAP_INDEX']:
+                start = datetime.datetime.fromtimestamp(int(int(start_time) / 1000))
+                end = datetime.datetime.fromtimestamp(int(int(end_time) / 1000))
+            else:
+                start = datetime.datetime.fromtimestamp(int(int(start_time)))
+                end = datetime.datetime.fromtimestamp(int(int(end_time))) 
+
             dest_index_name = 'dd'+self.index_name+end.strftime('%Y-%m-%d')
             source_index_name = self.index_name+end.strftime('%Y-%m-%d')
             
