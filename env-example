@@ -9,3 +9,4 @@ MAP_INDEX=map-
 RTP_INDEX=rtp-
 LOGLEVEL=logging.INFO
 THREADS = 10
+SIZE = 100

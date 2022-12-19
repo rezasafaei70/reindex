@@ -94,7 +94,7 @@ class Reindex:
 
             "source": {
                 "index": index_name+"*",
-                "size": 100,
+                "size": int(config['SIZE']),
                 "remote": {
                     "host": source,
                 },
@@ -118,24 +118,25 @@ class Reindex:
 
             dest_index_name = 'dd'+self.index_name+end.strftime('%Y-%m-%d')
             source_index_name = self.index_name+end.strftime('%Y-%m-%d')
+            try:
+                if es.indices.exists(index=dest_index_name):
+                    logger.debug("index_exist")
+                else:
+                    mapping = es1.indices.get_mapping(index=self.index_name_star)[source_index_name]['mappings']
+                    settings_set = es1.indices.get_settings(index=self.index_name_star)[source_index_name]['settings']
+                    del settings_set['index']['uuid']
+                    del settings_set['index']['provided_name']
+                    del settings_set['index']['version']
+                    del settings_set['index']['creation_date']
             
-            if es.indices.exists(index=dest_index_name):
-                logger.debug("index_exist")
-            else:
-                mapping = es1.indices.get_mapping(index=self.index_name_star)[source_index_name]['mappings']
-                settings_set = es1.indices.get_settings(index=self.index_name_star)[source_index_name]['settings']
-                del settings_set['index']['uuid']
-                del settings_set['index']['provided_name']
-                del settings_set['index']['version']
-                del settings_set['index']['creation_date']
-        
-                body = {
-                    "settings":settings_set,
-                    "mappings":mapping
-                }
-                
-                es.indices.create(index=dest_index_name,body=body)
-                
+                    body = {
+                        "settings":settings_set,
+                        "mappings":mapping
+                    }
+                    
+                    es.indices.create(index=dest_index_name,body=body)
+            except Exception as e:
+                logger.error("Reindex:checktime create mapping error" + str(e)) 
             if start.day == end.day:
                 return start_time, end_time
             else:
@@ -167,6 +168,7 @@ class Reindex:
                         end_time = int(start_time) + int(config['ELASTIC_DURATION'])
                     with lock:
                         start_time, end_time = self.checktime(start_time, end_time)
+                         
                     query = self.query(start_time, end_time,self.index_name)
                     try:
                         res = es.reindex(query)
