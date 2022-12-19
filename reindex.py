@@ -203,9 +203,9 @@ class Reindex:
                                 error_count_reindex_map(res['created'])
                             elif self.index_name == config['RTP_INDEX']:
                                 error_count_reindex_rtp(res['created'])
-                            logger.info("Reindex:reindex  conection failed  :" + str(end_time) + "  index_name " + self.index_name)
+                            logger.error("Reindex:reindex  conection failed  :" + str(end_time) + "  index_name " + self.index_name)
                         else:
-                            logger.info("Reindex:reindex before write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
+                            logger.error("Reindex:reindex before write_file end_time :" + str(end_time) + "  index_name " + self.index_name)
                             if self.index_name == config['MAP_INDEX']:
                                 end_time = int(end_time) + (int(config['ELASTIC_DURATION']) * 1000)
                             else:
