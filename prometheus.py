@@ -1,4 +1,4 @@
-from prometheus_client import Gauge
+from prometheus_client import Gauge, Info
 from elasticsearch import Elasticsearch
 
 from settings import config
@@ -18,6 +18,9 @@ g8 = Gauge('count_from_rtp', 'number of origin index rtp')
 g9 = Gauge('count_dest_kavosh', 'number remote reindex kavosh')
 g10 = Gauge('count_dest_map', 'number of remote reindex index map')
 g11 = Gauge('count_dest_rtp', 'number of remote reindex rtp')
+i = Info('my_build_version', 'Description of info')
+i.info({'version': config['VERSION']})
+
 
 es = Elasticsearch([config['ELASTIC_SOURCE']], timeout=int(config['TIMEOUT']))
 es1 = Elasticsearch([config['ELASTIC_DEST']], timeout=int(config['TIMEOUT']))
@@ -75,4 +78,5 @@ def count_dest_map():
 def count_dest_rtp():
     count = es1.count(index='dd'+config['RTP_INDEX']+"*", body={'query': {'match_all':{}}})["count"]
     g11.set(count)
+
 

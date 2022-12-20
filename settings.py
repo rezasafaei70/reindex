@@ -13,10 +13,12 @@ config = dotenv_values(".env")
 if not config['TIMEOUT']:
     config['TIMEOUT'] = 50
 if not config['ELASTIC_DURATION']:
-     config['ELASTIC_DURATION']=50
+     config['ELASTIC_DURATION']=10
 if not config['TIME_SLEEP']:
      config['TIME_SLEEP'] = 1
 if not config['SIZE']:
      config['SIZE'] = 100
+     
+config['VERSION']="v2.2.9"
     
 
