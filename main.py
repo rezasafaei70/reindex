@@ -38,18 +38,18 @@ def check_index_origin():
 def reindex_kavosh():
     reindex_kavosh = Reindex(config['KAVOSH_INDEX'], 'temp/index')
     while True:
-        reindex_kavosh.reindex()
+        reindex_kavosh.index()
         time.sleep(int(config['TIME_SLEEP']))
 def reindex_rtp():
     reindex_rtp = Reindex(config['RTP_INDEX'], 'temp/rtp')
     while True:
-        reindex_rtp.reindex()
+        reindex_rtp.index()
         time.sleep(int(config['TIME_SLEEP']))
 
 def reindex_map():
     reindex_map = Reindex(config['MAP_INDEX'], 'temp/map')
     while True:
-        reindex_map.reindex()
+        reindex_map.index()
         time.sleep(int(config['TIME_SLEEP']))
 
 def failure():
