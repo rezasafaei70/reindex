@@ -220,8 +220,8 @@ class Reindex:
                                 for hits in res_hits:
                                     del hits['_type']
                                     arr.append(hits)   
-                        res = helpers.bulk(es1,arr)
-                                   
+                        res = helpers.bulk(es,arr)
+                        message['created'] =  message['created'] + res[0]         
                     except elasticsearch.ElasticsearchException as e:
                             logger.error("add error end time is :" +
                                         str(end_time) + "  index_name " + self.index_name)
