@@ -111,8 +111,8 @@ if __name__ == '__main__':
     #     t3.start()
         
 
-    t4 = threading.Thread(target=failure)
-    t4.start()
+    # t4 = threading.Thread(target=failure)
+    # t4.start()
     # check_index_origin()
 
 

@@ -77,11 +77,11 @@ class Reindex:
                 else:
                     logger.info("Reindex:get_start_time not exists index name is " +
                                 self.index_name_star + " query is " + json.dumps(query))
-                    return "0"
+                    return 0
             except Exception as e:
                 logger.error("Rindex:get_start_time  error exception:" +
                              str(e) + "i ndex_name " + self.index_name_star)
-                return "0"
+                return -1
         logger.debug("Reindex:get_start_time after request return info_time: " +
                      str(info_time) + " index_name " + self.index_name_star)
         return info_time
@@ -187,28 +187,24 @@ class Reindex:
 
     def index(self):
         try:
+            time_now = int(time.time()) * 1000
+            step_time = int(config['ELASTIC_DURATION'])*120000
             with lock:
-                status = get_status(self.index_name)
-                if status == True:
-                    start_time = self.get_start_time()
-                    logger.info("index ------> start_time " +
-                                str(start_time) + " index_name "+self.index_name)
-                else:
-                    gte_time = self.read_file()
-                    if gte_time == '':
-                        gte_time = 0
-                    start_time = self.get_start_time(gte_time)
-                    logger.info("index ------> start_time " + str(start_time) +
-                                " gte_time " + str(gte_time) + " index_name "+self.index_name)
+                # status = get_status(self.index_name)
+                # if status == True:
+                
+                start_time = self.get_start_time()
+                logger.info("index ------> start_time " +
+                            str(start_time) + " index_name "+self.index_name)
+ 
 
-                if start_time != '0':
+                if int(start_time) > 0 and int(start_time)+step_time < int(time_now):
                     end_time = int(start_time) + \
                         (int(config['ELASTIC_DURATION']) * 1000)
                     self.write_file(end_time)
 
-            time_now = int(time.time()) * 1000
-            step_time = int(config['ELASTIC_DURATION'])*120000
-            if start_time != '0':
+           
+            if int(start_time) > 0:
                 if int(start_time)+step_time < int(time_now):
                     try:
                         self.set_settings(end_time)
@@ -217,12 +213,12 @@ class Reindex:
                         if res['status'] == 'ok':
                             logger.info("index -----> result created " + json.dumps(res) +
                                         " index_name " + self.index_name)
-                            set_status(self.index_name, True)
+                            # set_status(self.index_name, True)
                         else:
                             with lock:
                                 s_time = self.get_start_time(start_time)
                                 gte_time = self.read_file()
-                                set_status(self.index_name, False)
+                                # set_status(self.index_name, False)
                                 logger.warning('reindex ------> res[updated] and res[created] null index_name '
                                             + self.index_name + "start_time " +
                                             str(start_time) + " end_time " +
@@ -234,6 +230,7 @@ class Reindex:
                                         s_time) + (int(config['ELASTIC_DURATION']) * 1000)
                                     self.write_file(s_time)
                                 else:
+                                    
                                     logger.info(
                                         "stime < gte_time "+" s_time " + str(s_time)+" gte_time "+str(gte_time))
                     except Exception as e:
@@ -297,11 +294,14 @@ class Reindex:
                                     del hits['_type']
                                     del hits['_source']['data']
                                     arr.append(hits)
-                
-                        res1 = helpers.bulk(es, arr, refresh=True)
-                        message['created'] = message['created'] + res1[0]
-
+                        if len(arr)>0:
+                            res1 = helpers.bulk(es, arr, refresh=True)
+                            message['created'] = message['created'] + res1[0]
+                            message['status'] = 'ok'
+                        else:
+                            message['status'] = 'nok'
                     except Exception as e:
+                        message['status'] = 'ok'
                         logger.error("reindex error elastic  :" + str(e) + "  index_name " +
                                      self.index_name + " query " + json.dumps(query))
                         if self.index_name == config['KAVOSH_INDEX']:
@@ -320,6 +320,7 @@ class Reindex:
                         session.add(failure)
                         session.commit()
                         Session.remove()
+                        
                 try:
                     count = res['hits']['total']['value']
                     res3 = es1.search(index=self.index_name_star, body=query)
@@ -328,7 +329,7 @@ class Reindex:
                         logger.error("ERROR not equlas index count is "+ str(count) + " created is "+str(message['created']) +" last count is " +str(count3) + " start time " +str(start_time) + " end_time " + str(end_time))              
                 except Exception as e:
                     logger.error("count error " + str(e))
-                message['status'] = 'ok'
+               
                 return message
             else:
                 message['status'] = 'nok'
