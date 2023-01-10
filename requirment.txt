@@ -5,3 +5,4 @@ prometheus-client
 python-dotenv
 SQLAlchemy
 urllib3
+requests

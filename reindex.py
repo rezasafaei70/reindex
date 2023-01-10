@@ -152,7 +152,8 @@ class Reindex:
                                
                                 del hits['_source']['info']['head']
                                 try:
-                                    hits['_source']['data'] = removeWeirdChars(hits['_source']['data'])
+                                    if config['KAVOSH_INDEX'] == self.index_name:
+                                        hits['_source']['data'] = removeWeirdChars(hits['_source']['data'])
                                     res = helpers.bulk(es, [hits],refresh=True)
                                     session.query(Failure).filter(
                                     Failure.id == item.id).delete()
@@ -288,11 +289,12 @@ class Reindex:
 
                         arr = []
                         res_hits = res2['hits']['hits']
+                 
                         if res_hits:
                             if res_hits:
                                 for hits in res_hits:
                                     del hits['_type']
-                                    del hits['_source']['data']
+                                 
                                     arr.append(hits)
                         if len(arr)>0:
                             res1 = helpers.bulk(es, arr, refresh=True)
