@@ -261,14 +261,16 @@ class Reindex:
                     "gte": start_time, "lte": end_time, "boost": 2.0}}}
 
             query = {"query": range_array}
-
+            query1 = {}
             res = es1.search(index=self.index_name_star, body=query)
-            logger.info("reindex " + json.dumps(query))
+           
+            
             paginate = res['hits']['total']['value'] / size
+            logger.info("before reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
             paginate = math.ceil(paginate)
             
             if paginate > 0:
-                count_reindex_rtp(res['hits']['total']['value'])
+          
                 for item in range(paginate):
                     if item != 0:
                         from_page = (item*size)
@@ -281,11 +283,11 @@ class Reindex:
                         range_array = {"range": {"info.index_time": {
                             "gte": start_time, "lte": end_time, "boost": 2.0}}}
 
-                    query = {"size": size, "from": from_page,
+                    query1 = {"size": size, "from": from_page,
                              "query": range_array}
                     try:
                         res2 = es1.search(
-                            index=self.index_name_star, body=query)
+                            index=self.index_name_star, body=query1)
 
                         arr = []
                         res_hits = res2['hits']['hits']
@@ -305,7 +307,7 @@ class Reindex:
                     except Exception as e:
                         message['status'] = 'ok'
                         logger.error("reindex error elastic  :" + str(e) + "  index_name " +
-                                     self.index_name + " query " + json.dumps(query))
+                                     self.index_name + " query " + json.dumps(query1))
                         if self.index_name == config['KAVOSH_INDEX']:
                             error_count_reindex_kavosh(size)
                         elif self.index_name == config['MAP_INDEX']:
@@ -315,10 +317,10 @@ class Reindex:
                         end_time = int(end_time) + \
                             (int(config['ELASTIC_DURATION']) * 1000)
                         logger.info("Reindex:reindex after  write_file end_time :" + str(
-                            end_time) + "  index_name " + self.index_name + " query " + json.dumps(query))
+                            end_time) + "  index_name " + self.index_name + " query " + json.dumps(query1))
                         session = Session()
                         failure = Failure(start_time=start_time, end_time=end_time,
-                                          index_name=self.index_name_star, query=json.dumps(query))
+                                          index_name=self.index_name_star, query=json.dumps(query1))
                         session.add(failure)
                         session.commit()
                         Session.remove()
@@ -326,9 +328,11 @@ class Reindex:
                 try:
                     count = res['hits']['total']['value']
                     res3 = es1.search(index=self.index_name_star, body=query)
+                    
                     count3 = res3['hits']['total']['value']
                     if int(message['created']) != int(count3) or int(count3)==10000:
-                        logger.error("ERROR not equlas index count is "+ str(count) + " created is "+str(message['created']) +" last count is " +str(count3) + " start time " +str(start_time) + " end_time " + str(end_time))              
+                        logger.info("after reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
+                        logger.error("ERROR NOT equlas index count is "+ str(count) + " created is "+str(message['created']) +" last count is " +str(count3) + " start time " +str(start_time) + " end_time " + str(end_time))              
                 except Exception as e:
                     logger.error("count error " + str(e))
                
@@ -357,9 +361,23 @@ def removeWeirdChars(text):
                                u"\u2600-\u2B55"
                                u"\u23cf"
                                u"\u23e9"
+                               u"\ude67"
+                               u"\uda14"
+                               u"\ud81f"
+                               u"\udb97"
+                               u"\udb57"
+                               u"\uda14"
+                               u"\ude15"
                                u"\u231a"
                                u"\u3030"
                                u"\ufe0f"
+                               u"\udd00"
+                               u"\udbba"
+                               u"\uda4f"
+                               u"\ude82"
+                               u"\udce7"
+                               u"\uda01"
+                               u"\udc94"
                                u"\u2069"
                                u"\u2066"
                                u"\u200c"
