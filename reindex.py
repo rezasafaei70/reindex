@@ -63,7 +63,7 @@ class Reindex:
             query = {"size": 1, "sort": sort,
                      "query": range}
             try:
-                logger.info("get_start_time send request time query is " +
+                logger.debug("get_start_time send request time query is " +
                             json.dumps(query)+" index_name " + self.index_name_star)
 
                 res = es1.search(query, index=self.index_name_star)
@@ -75,7 +75,7 @@ class Reindex:
                     else:
                         info_time = res[0]['_source']['info']['index_time']
                 else:
-                    logger.info("Reindex:get_start_time not exists index name is " +
+                    logger.debug("Reindex:get_start_time not exists index name is " +
                                 self.index_name_star + " query is " + json.dumps(query))
                     return 0
             except Exception as e:
@@ -155,14 +155,22 @@ class Reindex:
                                     if config['KAVOSH_INDEX'] == self.index_name:
                                         hits['_source']['data'] = removeWeirdChars(hits['_source']['data'])
                                     res = helpers.bulk(es, [hits],refresh=True)
+                                    logger.info("failure succses removeWeirdChars and index")
                                     session.query(Failure).filter(
                                     Failure.id == item.id).delete()
                                     session.commit()
                                 except Exception as e:
-                                    logger.error("failded index before rindex"+str(e))
-                                    del hits['_source']['data']
-                                    logger.error("failded index after reindex"+str(e))
-                    logger.info("check falure query " +
+                                    try:
+                                        if config['KAVOSH_INDEX'] == self.index_name:
+                                            del hits['_source']['data']
+                                            res = helpers.bulk(es, [hits],refresh=True)
+                                            logger.info("failure succses del data and index")
+                                        else:
+                                            logger.error(" not index failure " +str(e)+" index_name "+self.index_name)
+                                    except Exception as e :
+                                        logger.error("not index failure " +str(e))
+                                   
+                    logger.debug("check falure query " +
                                 json.dumps(query) + " index_name " + index_name)
                    
                     if self.index_name == config['KAVOSH_INDEX']:
@@ -195,7 +203,7 @@ class Reindex:
                 # if status == True:
                 
                 start_time = self.get_start_time()
-                logger.info("index ------> start_time " +
+                logger.debug("index ------> start_time " +
                             str(start_time) + " index_name "+self.index_name)
  
 
@@ -220,7 +228,7 @@ class Reindex:
                                 s_time = self.get_start_time(start_time)
                                 gte_time = self.read_file()
                                 # set_status(self.index_name, False)
-                                logger.warning('reindex ------> res[updated] and res[created] null index_name '
+                                logger.info('reindex ------> res[updated] and res[created] null index_name '
                                             + self.index_name + "start_time " +
                                             str(start_time) + " end_time " +
                                             str(end_time) + " gte_time " +
@@ -232,7 +240,7 @@ class Reindex:
                                     self.write_file(s_time)
                                 else:
                                     
-                                    logger.info(
+                                    logger.debug(
                                         "stime < gte_time "+" s_time " + str(s_time)+" gte_time "+str(gte_time))
                     except Exception as e:
                         logger.error("index ----> index error "+str(e)+" index_name " + self.index_name +
@@ -266,7 +274,7 @@ class Reindex:
            
             
             paginate = res['hits']['total']['value'] / size
-            logger.info("before reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
+            logger.debug("before reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
             paginate = math.ceil(paginate)
             
             if paginate > 0:
@@ -316,7 +324,7 @@ class Reindex:
                             error_count_reindex_rtp(size)
                         end_time = int(end_time) + \
                             (int(config['ELASTIC_DURATION']) * 1000)
-                        logger.info("Reindex:reindex after  write_file end_time :" + str(
+                        logger.debug("Reindex:reindex after  write_file end_time :" + str(
                             end_time) + "  index_name " + self.index_name + " query " + json.dumps(query1))
                         session = Session()
                         failure = Failure(start_time=start_time, end_time=end_time,
@@ -331,7 +339,7 @@ class Reindex:
                     
                     count3 = res3['hits']['total']['value']
                     if int(message['created']) != int(count3) or int(count3)==10000:
-                        logger.info("after reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
+                        logger.error("after reindex log query and count " + json.dumps(query) + " count " + str(res['hits']['total']['value']))
                         logger.error("ERROR NOT equlas index count is "+ str(count) + " created is "+str(message['created']) +" last count is " +str(count3) + " start time " +str(start_time) + " end_time " + str(end_time))              
                 except Exception as e:
                     logger.error("count error " + str(e))
@@ -383,6 +391,22 @@ def removeWeirdChars(text):
                                u"\u200c"
                                u"\u2068"
                                u"\u2067"
+                               u"\uda64"
+                               u"\ud9de"
+                               u"\uda42"
+                               u"\udd2b"
+                               u"\udb76"
+                               u"\ude3f"
+                               u"\ud9e6"
+                               u"\udac6"
+                               u"\ude13"
+                               u"\udba8"
+                               u"\udc24"
+                               u"\udc24"
+                               u"\udfc5"
+                               u"\udf84"
+                               u"\udc74"
+                               u"\udc74"
                                u"\u0000"
                                u"\x00"
                                u"\x0b"
