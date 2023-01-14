@@ -1,7 +1,4 @@
-from datetime import datetime
+data = b'\udcc7\ asda asdasd'
 
-dt_obj = datetime.strptime('20.12.2016 09:38:42',
-                           '%d.%m.%Y %H:%M:%S')
-millisec = dt_obj.timestamp() * 1000
-
-print(millisec)
+line= data.decode('utf-8','ignore').encode("utf-8") 
+print(line)

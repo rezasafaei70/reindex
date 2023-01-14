@@ -152,14 +152,13 @@ class Reindex:
                                
                                 del hits['_source']['info']['head']
                                 try:
-                                    if config['KAVOSH_INDEX'] == self.index_name:
+                                    if 'data' == hits['_source']:
                                         hits['_source']['data'] = removeWeirdChars(hits['_source']['data'])
-                                       
+                                        del hits['_source']['data']
                                         
                                     res = helpers.bulk(es, [hits],refresh=True)
                                     logger.info("failure succses removeWeirdChars and index res is " )
-                                    session.query(Failure).filter(
-                                    Failure.id == item.id).delete()
+                                    session.query(Failure).filter(Failure.id == item.id).delete()
                                     session.commit()
                                     Session.remove()
                                 except Exception as e:
@@ -201,7 +200,7 @@ class Reindex:
     def index(self):
         try:
             time_now = int(time.time()) * 1000
-            step_time = int(config['ELASTIC_DURATION'])*120000
+            step_time = int(config['ELASTIC_DURATION'])*600000
             with lock:
                
                 
@@ -307,7 +306,7 @@ class Reindex:
                             if res_hits:
                                 for hits in res_hits:
                                     del hits['_type']
-                                 
+                                    del hits['_source']['data']
                                     arr.append(hits)
                         if len(arr)>0:
                             res1 = helpers.bulk(es, arr, refresh=True)

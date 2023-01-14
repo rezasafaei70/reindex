@@ -96,23 +96,23 @@ if __name__ == '__main__':
     for t1 in thread_koavosh:
         t1.start()
     
-    thread_map = []
-    for i in range(int(config['THREADS'])):
-        t2 = threading.Thread(target=reindex_map)
-        thread_map.append(t2)
-    for t2 in thread_map:
-        t2.start()
+    # thread_map = []
+    # for i in range(int(config['THREADS'])):
+    #     t2 = threading.Thread(target=reindex_map)
+    #     thread_map.append(t2)
+    # for t2 in thread_map:
+    #     t2.start()
     
-    thread_rtp = []
-    for i in range(int(config['THREADS'])):
-        t3 = threading.Thread(target=reindex_rtp)
-        thread_rtp.append(t3)
-    for t3 in thread_rtp:
-        t3.start()
+    # thread_rtp = []
+    # for i in range(int(config['THREADS'])):
+    #     t3 = threading.Thread(target=reindex_rtp)
+    #     thread_rtp.append(t3)
+    # for t3 in thread_rtp:
+    #     t3.start()
         
 
-    t4 = threading.Thread(target=failure)
-    t4.start()
+    # t4 = threading.Thread(target=failure)
+    # t4.start()
    
     check_index_origin()
 
