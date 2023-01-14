@@ -154,20 +154,24 @@ class Reindex:
                                 try:
                                     if config['KAVOSH_INDEX'] == self.index_name:
                                         hits['_source']['data'] = removeWeirdChars(hits['_source']['data'])
+                                       
+                                        
                                     res = helpers.bulk(es, [hits],refresh=True)
-                                    logger.info("failure succses removeWeirdChars and index")
+                                    logger.info("failure succses removeWeirdChars and index res is " )
                                     session.query(Failure).filter(
                                     Failure.id == item.id).delete()
                                     session.commit()
+                                    Session.remove()
                                 except Exception as e:
                                     try:
-                                        if config['KAVOSH_INDEX'] == self.index_name:
+                                        if 'data' in  hits['_source']:   
                                             del hits['_source']['data']
                                             res = helpers.bulk(es, [hits],refresh=True)
                                             logger.info("failure succses del data and index")
                                         else:
                                             logger.error(" not index failure " +str(e)+" index_name "+self.index_name)
                                     except Exception as e :
+
                                         logger.error("not index failure " +str(e))
                                    
                     logger.debug("check falure query " +
@@ -189,7 +193,7 @@ class Reindex:
                     elif self.index_name == config['RTP_INDEX']:
                         error_count_reindex_rtp(res['created'])
 
-            Session.remove()
+            
         except Exception as e:
             logger.error("Reindex:check_failure " + str(e))
         return "ok"
@@ -199,8 +203,7 @@ class Reindex:
             time_now = int(time.time()) * 1000
             step_time = int(config['ELASTIC_DURATION'])*120000
             with lock:
-                # status = get_status(self.index_name)
-                # if status == True:
+               
                 
                 start_time = self.get_start_time()
                 logger.debug("index ------> start_time " +
@@ -222,12 +225,12 @@ class Reindex:
                         if res['status'] == 'ok':
                             logger.info("index -----> result created " + json.dumps(res) +
                                         " index_name " + self.index_name)
-                            # set_status(self.index_name, True)
+                       
                         else:
                             with lock:
                                 s_time = self.get_start_time(start_time)
                                 gte_time = self.read_file()
-                                # set_status(self.index_name, False)
+                              
                                 logger.info('reindex ------> res[updated] and res[created] null index_name '
                                             + self.index_name + "start_time " +
                                             str(start_time) + " end_time " +
